@@ -17,7 +17,7 @@ model Article {
   short_description String
   description       String
   author            String
-  is_public         Boolean
+  is_public         Boolean @default(true)
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
   deleted_at        DateTime?
