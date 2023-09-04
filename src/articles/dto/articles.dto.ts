@@ -1,5 +1,5 @@
 // src/articles/dto/create-article.dto.ts
-import { IsString, IsBoolean, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 
 export class CreateArticleDto {
   @IsNotEmpty()
@@ -21,8 +21,4 @@ export class CreateArticleDto {
   @IsNotEmpty()
   @IsString()
   author: string;
-
-  @IsNotEmpty()
-  @IsBoolean()
-  is_public: boolean;
 }

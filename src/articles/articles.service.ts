@@ -1,12 +1,13 @@
 // src/articles/articles.service.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; 
+import { Article } from '@prisma/client';
 
 @Injectable()
 export class ArticlesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: { title: string, image: string, short_description: string, description: string, author: string, is_public: boolean }) {
+  async create(data: { title: string, image: string, short_description: string, description: string, author: string}) {
     return this.prisma.article.create({
       data: {
         ...data,
@@ -15,18 +16,19 @@ export class ArticlesService {
   }
 
   async findAll() {
-    return this.prisma.article.findMany();
+    return (await this.prisma.article.findMany()).filter((article) => article.deleted_at === null);
   }
 
   async findOne(id: number) {
     return this.prisma.article.findUnique({
       where: {
-        id,
+        id : id,
+        deleted_at : null
       },
     });
   }
 
-  async update(id: number, data: { title: string, image: string, short_description: string, description: string, author: string, is_public: boolean }) {
+  async update(id: number, data: { title: string, image: string, short_description: string, description: string, author: string}) {
     return this.prisma.article.update({
       where: {
         id,
@@ -38,10 +40,21 @@ export class ArticlesService {
   }
 
   async remove(id: number) {
-    return this.prisma.article.delete({
+    var article   = this.findOne(id);
+    return this.prisma.article.update({
       where: {
         id,
       },
+      data: {
+        ...article,
+        deleted_at : new Date()
+      }
     });
+  }
+  async public(){
+    return (await this.findAll()).filter(article => article.is_public === true)
+  }
+  async private(){
+    return (await this.findAll()).filter(article => article.is_public === false)
   }
 }

@@ -8,11 +8,11 @@ import { Controller, Get, Post, Body, Param, Put, Delete, ParseIntPipe, HttpExce
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/articles.dto';
 
-@Controller('articles')
+@Controller()
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
-  @Post()
+  @Post('articles')
   async create(@Body() createArticleDto: CreateArticleDto) {
     try {
       const article = await this.articlesService.create(createArticleDto);
@@ -22,7 +22,7 @@ export class ArticlesController {
     }
   }
 
-  @Get()
+  @Get('articles')
   async findAll() {
     try {
       const articles = await this.articlesService.findAll();
@@ -33,7 +33,7 @@ export class ArticlesController {
     }
   }
 
-  @Get(':id')
+  @Get('articles/:id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     try {
       const article = await this.articlesService.findOne(id);
@@ -42,11 +42,12 @@ export class ArticlesController {
       }
       return article;
     } catch (error) {
+      console.log(error);
       throw new HttpException('Could not fetch article', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  @Put(':id')
+  @Put('articles/:id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() updateArticleDto: CreateArticleDto) {
     try {
       const article = await this.articlesService.update(id, updateArticleDto);
@@ -55,11 +56,12 @@ export class ArticlesController {
       }
       return article;
     } catch (error) {
+      console.log(error);
       throw new HttpException('Could not update article', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  @Delete(':id')
+  @Delete('articles/:id')
   async remove(@Param('id', ParseIntPipe) id: number) {
     try {
       const article = await this.articlesService.remove(id);
@@ -68,7 +70,28 @@ export class ArticlesController {
       }
       return article;
     } catch (error) {
-      throw new HttpException('Could not delete article', HttpStatus.INTERNAL_SERVER_ERROR);
+      console.log(error);
+      throw new HttpException('Could not delete article or Article not found', HttpStatus.NOT_FOUND);
+    }
+  }
+  @Get('/public/articles')
+  async public() {
+    try {
+      const articles = await this.articlesService.public();
+      return articles;
+    } catch (error) {
+      console.log(error);
+      throw new HttpException('Could not fetch articles', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  @Get('/private/articles')
+  async private() {
+    try {
+      const articles = await this.articlesService.private();
+      return articles;
+    } catch (error) {
+      console.log(error);
+      throw new HttpException('Could not fetch articles', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
