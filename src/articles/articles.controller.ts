@@ -1,14 +1,11 @@
-// import { Controller } from '@nestjs/common';
-
-// @Controller('articles')
-// export class ArticlesController {}
-
-// src/articles/articles.controller.ts
-import { Controller, Get, Post, Body, Param, Put, Delete, ParseIntPipe, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, ParseIntPipe, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/articles.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtMiddleware } from 'src/jwt/jwt.middleware';
 
 @Controller()
+@UseGuards(JwtAuthGuard)
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 

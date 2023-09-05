@@ -1,7 +1,6 @@
 // src/articles/articles.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; 
-import { Article } from '@prisma/client';
 
 @Injectable()
 export class ArticlesService {
@@ -51,9 +50,11 @@ export class ArticlesService {
       }
     });
   }
+
   async public(){
     return (await this.findAll()).filter(article => article.is_public === true)
   }
+
   async private(){
     return (await this.findAll()).filter(article => article.is_public === false)
   }
