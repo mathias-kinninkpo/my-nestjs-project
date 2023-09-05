@@ -23,3 +23,19 @@ model Article {
   deleted_at        DateTime?
 }
 
+
+// user.model.ts
+model User {
+  id Int @id @default(autoincrement())
+  firstname String
+  lastname String
+  username String @unique
+  email String @unique
+  image String
+  phone String @unique
+  password String
+  code String?
+  email_verified_at DateTime?
+}
+
+
