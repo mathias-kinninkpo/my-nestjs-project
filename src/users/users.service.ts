@@ -6,12 +6,15 @@ import * as bcrypt from 'bcrypt';
 import { UserCreate, UserCreateInput, generateValidationCode } from './users.model';
 import { MailerService } from './mailer.service';
 import * as jwt from 'jsonwebtoken'
+import { ArticlesService } from 'src/articles/articles.service';
+
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly mailerService: MailerService
+    private readonly mailerService: MailerService,
+    private readonly articlesService: ArticlesService
     ) {}
 
   async create(data: UserCreateInput) {
@@ -134,12 +137,22 @@ export class UsersService {
 
   async uptadeUser(id: number, data : UserCreateInput){
     const _user = await this.findById(id);
-    if (_user){
-        this.prisma.user.update({
-            where : {id: _user.id},
-            data : data
-        })
+    var hashedPassword = _user.password
+    const x = await this.comparePasswords(data.password, hashedPassword)
+    console.log(x)
+    if ((!this.comparePasswords(data.password, hashedPassword)) && (data.password !== hashedPassword)){
+
+       hashedPassword = await bcrypt.hash(data.password, 10);
+      
     }
+    if (_user){
+        return this.prisma.user.update({
+            where : {id: _user.id},
+            data : {...data, password : hashedPassword}
+        })
+        
+    }
+    throw new HttpException("User not found", 404)
   }
 
 
@@ -149,5 +162,62 @@ export class UsersService {
     })
   }
 
+
+  async forgotPassword(email: string) {
+    const user = await this.findByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const verificationCode = generateValidationCode(8);
+
+    const _user = { ...user, code: verificationCode };
+
+    if (this.uptadeUser(user.id, _user)) {
+
+      await this.sendValidationEmail(email, verificationCode);
+      return { message: 'Verification code sent successfully' };
+    }
+    throw new HttpException('An error occured', 400)  
+
+
+  }
+
+
+  async forgotPasswordVerify(email: string, verificationCode: string) {
+    
+    const user = await this.findByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (user.code !== verificationCode) {
+      throw new UnauthorizedException('Invalid verification code');
+    }
+    const _user = {...user, code: null}
+    this.uptadeUser(user.id, _user);
+
+    return { message: 'code veried successfully, you can now reset your password' };
+
+  }
+
+  async findArticlesByUser(id: number){
+    const _user = await this.findById(id);
+
+    if (!_user){
+      throw new HttpException('User not found', 404)
+    }
+    
+    const articles = (await this.articlesService.findAll()).filter(article => (article.author === _user.email || article.author === _user.username))
+
+    return articles
+  }
+
+
 }
+
+
+
 

@@ -34,5 +34,27 @@ export class UsersController {
   @Get('/users/:id')
   async read(@Param('id', ParseIntPipe) id : number){
     return this.usersService.readUser(id)
+
   }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: { email: string }) {
+    return this.usersService.forgotPassword(forgotPasswordDto.email);
+  }
+
+  @Post('forgot-password/verify')
+  async forgotPasswordVerify(@Body() forgotPasswordDto: { email: string, code: string }) {
+    
+    return this.usersService.forgotPasswordVerify(forgotPasswordDto.email, forgotPasswordDto.code);
+
+  }
+
+  @Get('users/:id/articles')
+  async findArticlesByUser(@Param('id', ParseIntPipe) id : number){
+
+    return this.usersService.findArticlesByUser(id)
+  }
+
+
+ 
 }
