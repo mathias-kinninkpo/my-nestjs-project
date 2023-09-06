@@ -7,6 +7,11 @@ import { UsersModule } from './users/users.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './auth/jwt.strategy';
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { generateUniqueFilename } from './utils';
+
+
 
 @Module({
   imports: [ArticlesModule, UsersModule,
@@ -14,6 +19,16 @@ import { JwtStrategy } from './auth/jwt.strategy';
       JwtModule.register({
         secret: 'codesecrete', 
         signOptions: { expiresIn: '120h' }, 
+      }),
+      MulterModule.register({
+        storage: diskStorage({
+          destination: './assets/images/profiles', 
+          filename: (req, file, cb) => {
+            const uniqueFilename = generateUniqueFilename(file.originalname); 
+            console.log(uniqueFilename);
+            cb(null, `${uniqueFilename}`);
+          },
+        }),
       }),
   ],
   controllers: [AppController],
