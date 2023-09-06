@@ -1,7 +1,11 @@
 // users/users.controller.ts
-import { Controller, Post, Body, Get, Put, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Body, Get, Res, Put, Param, ParseIntPipe, UseInterceptors, UploadedFile} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserCreateInput } from './users.model';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { generateUniqueFilename } from 'src/utils';
+import * as path from 'path';
 
 @Controller()
 export class UsersController {
@@ -9,8 +13,19 @@ export class UsersController {
 
 
   @Post("register")
-  async register(@Body() user : UserCreateInput){
-    return this.usersService.create(user)
+  @UseInterceptors(FileInterceptor("image",{
+    storage : diskStorage({
+      destination: './assets/images/profiles', 
+      filename: (req, file, cb) => {
+        const uniqueFilename = generateUniqueFilename(file.originalname); 
+        cb(null, `${uniqueFilename}`);
+      },
+    }),}
+
+  )
+)
+  async register(@Body() user : UserCreateInput, @UploadedFile() image){
+    return this.usersService.create(user, image)
   }
 
   @Post("register/verify")
@@ -54,6 +69,15 @@ export class UsersController {
 
     return this.usersService.findArticlesByUser(id)
   }
+  // @Get(':filename')
+  // async serveImage(@Param('filename') filename: string, @Res() res: Response) {
+  //   // Assurez-vous que le chemin pointe vers le répertoire où sont stockées vos images de profil
+  //   const imagePath = path.join(__dirname, '../path/vers/votre/repertoire/images', filename);
+    
+  //   // Utilisez la méthode res.sendFile pour renvoyer le fichier au client
+  //   res.sendFile(imagePath);
+
+  // }
 
 
  

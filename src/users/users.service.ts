@@ -1,12 +1,15 @@
 // users/users.service.ts
 import { Injectable, UnauthorizedException , HttpException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, User } from '@prisma/client';
+import { Prisma,} from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { UserCreate, UserCreateInput, generateValidationCode } from './users.model';
 import { MailerService } from './mailer.service';
 import * as jwt from 'jsonwebtoken'
 import { ArticlesService } from 'src/articles/articles.service';
+import * as sharp from 'sharp'
+import * as fs from 'fs'
+import { extname } from 'path';
 
 
 @Injectable()
@@ -17,29 +20,47 @@ export class UsersService {
     private readonly articlesService: ArticlesService
     ) {}
 
-  async create(data: UserCreateInput) {
 
+  generateUniqueFilename(filename) {
+    const randomBytes =  Math.round(Math.random() * 1e9)
+    const timestamp = Date.now();
+    return `${filename}${timestamp}${randomBytes}${extname(filename)}`;
+  }
+
+
+  async create(data: UserCreateInput, image ) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    const code = generateValidationCode(8)
+    const code = generateValidationCode(8);
 
-    const user: UserCreate = {
-      ...data,
-      password: hashedPassword,
-      code : code,
-    };
+    // const resizedImage = await sharp(image.buffer)
+    //   .resize({ width: 200, height: 200 })
+    //   .toBuffer();
 
-    const _user = this.prisma.user.create({ 
-       data: user
+    // const storagePath = './assets/images/profile'; 
+    // if (!fs.existsSync(storagePath)) {
+    //   fs.mkdirSync(storagePath, { recursive: true });
+    // }
+
+    // const imagePath = `${storagePath}/${uniqueFilename}`;
+    // fs.writeFileSync(imagePath, resizedImage);
+
+    const user = await this.prisma.user.create({
+      data: {
+        ...data,
+        password: hashedPassword,
+        code : code,
+        image : image.path ? image.path : "image.jpg"
+      },
     });
-    if (_user && this.sendValidationEmail((await _user).email, (await _user).code)){
 
-        return {
-            message : "user created and email sent successfully",
-            code: (await _user).code,
-        }
+    if (user && this.sendValidationEmail(user.email, code)) {
+      return {
+        message: 'User created and email sent successfully',
+        code,
+      };
     }
-    throw new HttpException("An error occured", 400)
 
+    throw new HttpException('An error occurred', 400);
   }
 
 
@@ -89,7 +110,7 @@ export class UsersService {
 
 
 
-  async generateToken(user: User) {
+  async generateToken(user) {
     const payload = {
       sub: user.id, 
       email: user.email, 
