@@ -1,5 +1,7 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { randomBytes } from 'crypto';
 // prisma/user.model.ts
+
 // user.model.ts
 export class User {
     id: number;
@@ -15,23 +17,41 @@ export class User {
   }
   
   export class UserCreate{
+    @ApiProperty()
     firstname: string;
+    @ApiProperty()
     lastname: string;
+    @ApiProperty()
     username: string;
+    @ApiProperty()
     email: string;
+    @ApiProperty()
     image: string;
+    @ApiProperty()
     phone: string;
+    @ApiProperty()
     code: string;
+    @ApiProperty()
     password: string; 
   }
 
   export class UserCreateInput{
+    @ApiProperty()
     firstname: string;
+    @ApiProperty()
     lastname: string;
+    @ApiProperty()
     username: string;
+    @ApiProperty()
     email: string;
+    @ApiProperty({
+       type: 'string', 
+       format: 'binary' 
+    })
     image: string;
+    @ApiProperty()
     phone: string;
+    @ApiProperty()
     password: string; 
   }
 

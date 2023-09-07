@@ -10,6 +10,7 @@ import { ArticlesService } from 'src/articles/articles.service';
 import * as sharp from 'sharp'
 import * as fs from 'fs'
 import { extname } from 'path';
+import { ExecOptions } from 'child_process';
 
 
 @Injectable()
@@ -156,20 +157,28 @@ export class UsersService {
 
 
 
-  async uptadeUser(id: number, data : UserCreateInput){
+  async uptadeUser(id: number, data : UserCreateInput, image : any){
     const _user = await this.findById(id);
     var hashedPassword = _user.password
-    const x = await this.comparePasswords(data.password, hashedPassword)
-    console.log(x)
+    var img = ""
     if ((!this.comparePasswords(data.password, hashedPassword)) && (data.password !== hashedPassword)){
 
        hashedPassword = await bcrypt.hash(data.password, 10);
       
     }
+
+    // check if image has been changed
+    if (image && image.originalname && image.path){
+      img = image.path
+    }
     if (_user){
+      if (img === ""){
+        img = _user.image
+      }
+      
         return this.prisma.user.update({
             where : {id: _user.id},
-            data : {...data, password : hashedPassword}
+            data : {...data, password : hashedPassword, image : img}
         })
         
     }
@@ -195,7 +204,7 @@ export class UsersService {
 
     const _user = { ...user, code: verificationCode };
 
-    if (this.uptadeUser(user.id, _user)) {
+    if (this.uptadeUser(user.id, _user, "")) {
 
       await this.sendValidationEmail(email, verificationCode);
       return { message: 'Verification code sent successfully' };
@@ -218,7 +227,7 @@ export class UsersService {
       throw new UnauthorizedException('Invalid verification code');
     }
     const _user = {...user, code: null}
-    this.uptadeUser(user.id, _user);
+    this.uptadeUser(user.id, _user, "");
 
     return { message: 'code veried successfully, you can now reset your password' };
 
