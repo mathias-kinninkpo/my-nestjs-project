@@ -15,7 +15,7 @@ const options = {
 export class JwtStrategy extends PassportStrategy(Strategy) {
  
    
-  constructor() {
+  constructor(private readonly usersService: UsersService) {
     super({
       jwtFromRequest: ExtractJwt.versionOneCompatibility(options),
       ignoreExpiration: false,
@@ -26,9 +26,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   
   async validate(payload: any) {
-    var usersService : UsersService
     console.log("validate", payload)
-    if (usersService.findByEmail(payload.email)){
+    if (this.usersService.findByEmail(payload.email)){
 
       return { userId: payload.sub, email: payload.email }; 
     }
