@@ -15,8 +15,8 @@ async function bootstrap() {
     new ExpressAdapter(server), 
   );
 
-  console.log(path.join(__dirname, '..'))
-  app.use('.', express.static(path.join(__dirname, '..')));
+  console.log(path.join(__dirname, '..', 'assets'))
+  app.use('/assets/', express.static(path.join(__dirname, '..', 'assets')));
   const config = new DocumentBuilder()
   .setTitle('Articles API')
   .setDescription('API de gestion des articles')
