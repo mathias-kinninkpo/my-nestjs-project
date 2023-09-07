@@ -1,18 +1,38 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, ParseIntPipe, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, ParseIntPipe, HttpException, HttpStatus, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/articles.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { JwtMiddleware } from 'src/jwt/jwt.middleware';
+import { ApiHeader, ApiTags, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { generateUniqueFilename } from 'src/utils';
 
 @Controller()
+@ApiTags('Les actions sur les articles')
 @UseGuards(JwtAuthGuard)
+@ApiHeader({
+  name : 'authorization',
+  
+})
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
   @Post('articles')
-  async create(@Body() createArticleDto: CreateArticleDto) {
+  @UseInterceptors(FileInterceptor("image",{
+    storage : diskStorage({
+      destination: './assets/images/articles', 
+      filename: (req, file, cb) => {
+        const uniqueFilename = generateUniqueFilename(file.originalname); 
+        cb(null, `${uniqueFilename}`);
+      },
+    }),}
+
+  )
+ )
+ @ApiConsumes('multipart/form-data')
+  async create(@Body() createArticleDto: CreateArticleDto, @UploadedFile() image : Express.Multer.File) {
     try {
-      const article = await this.articlesService.create(createArticleDto);
+      const article = await this.articlesService.create(createArticleDto, image);
       return article;
     } catch (error) {
       throw new HttpException('Could not create article', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -45,9 +65,21 @@ export class ArticlesController {
   }
 
   @Put('articles/:id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updateArticleDto: CreateArticleDto) {
+  @UseInterceptors(FileInterceptor("image",{
+    storage : diskStorage({
+      destination: './assets/images/articles', 
+      filename: (req, file, cb) => {
+        const uniqueFilename = generateUniqueFilename(file.originalname); 
+        cb(null, `${uniqueFilename}`);
+      },
+    }),}
+
+  )
+ )
+ @ApiConsumes('multipart/form-data')
+  async update(@Param('id', ParseIntPipe) id: number, @Body() updateArticleDto: CreateArticleDto,@UploadedFile() image) {
     try {
-      const article = await this.articlesService.update(id, updateArticleDto);
+      const article = await this.articlesService.update(id, updateArticleDto, image);
       if (!article) {
         throw new HttpException('Article not found', HttpStatus.NOT_FOUND);
       }

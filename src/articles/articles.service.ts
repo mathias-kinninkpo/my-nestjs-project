@@ -1,15 +1,17 @@
 // src/articles/articles.service.ts
-import { Injectable, UseGuards } from '@nestjs/common';
+import { HttpException, Injectable, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; 
+import { CreateArticleDto } from './dto/articles.dto';
 
 @Injectable()
 export class ArticlesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: { title: string, image: string, short_description: string, description: string, author: string}) {
+  async create(data: CreateArticleDto, image : Express.Multer.File) {
     return this.prisma.article.create({
       data: {
         ...data,
+        image : image.path ? image.path : "image.png",
       },
     });
   }
@@ -27,19 +29,34 @@ export class ArticlesService {
     });
   }
 
-  async update(id: number, data: { title: string, image: string, short_description: string, description: string, author: string}) {
-    return this.prisma.article.update({
-      where: {
-        id,
-      },
-      data: {
-        ...data,
-      },
-    });
+  async update(id: number, data: CreateArticleDto, image) {
+
+    var img = ""
+
+    const article = await this.findOne(id)
+    if (image && image.originalname && image.path){
+      img = image.path
+    }
+
+   if (article){
+
+     img = img === "" ? article.image : img
+
+     return this.prisma.article.update({
+       where: {
+         id,
+       },
+       data: {
+         ...data,
+         image : img
+       },
+     });
+   }
+   throw new HttpException("Article not found",404)
   }
 
   async remove(id: number) {
-    var article   = this.findOne(id);
+    var article   = await this.findOne(id);
     return this.prisma.article.update({
       where: {
         id,
