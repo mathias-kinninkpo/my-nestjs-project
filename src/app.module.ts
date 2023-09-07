@@ -10,6 +10,9 @@ import { JwtStrategy } from './auth/jwt.strategy';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { generateUniqueFilename } from './utils';
+import { UsersService } from './users/users.service';
+import { MailerService } from './users/mailer.service';
+import { ArticlesService } from './articles/articles.service';
 
 
 
@@ -32,6 +35,6 @@ import { generateUniqueFilename } from './utils';
       }),
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService, JwtStrategy],
+  providers: [AppService, PrismaService, JwtStrategy, UsersService, MailerService,ArticlesService],
 })
 export class AppModule {}
